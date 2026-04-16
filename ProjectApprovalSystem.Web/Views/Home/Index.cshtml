@@ -1,0 +1,300 @@
+@model DashboardViewModel
+
+@{
+    ViewData["Title"] = "PAS Dashboard";
+    var selectedStudentId = Model.SelectedStudentId ?? 0;
+    var selectedSupervisorId = Model.SelectedSupervisorId ?? 0;
+}
+
+<section class="hero-panel">
+    <div>
+        <p class="eyebrow">Coursework demo dashboard</p>
+        <h2>Run the full PAS flow from one screen</h2>
+        <p class="hero-copy">Students can submit proposals, supervisors can review anonymous work and express interest, and the coordinator can manage areas, users, and final match decisions.</p>
+    </div>
+    <div class="hero-note">
+        <h3>Seeded demo accounts</h3>
+        <ul>
+            <li>student1@pas.local / Password123!</li>
+            <li>student2@pas.local / Password123!</li>
+            <li>supervisor1@pas.local / Password123!</li>
+            <li>supervisor2@pas.local / Password123!</li>
+            <li>leader@pas.local / Password123!</li>
+        </ul>
+    </div>
+</section>
+
+@if (TempData["StatusMessage"] is string statusMessage)
+{
+    <div class="flash flash-success">@statusMessage</div>
+}
+
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="flash flash-error">@errorMessage</div>
+}
+
+<section class="selection-grid">
+    <form method="get" asp-action="Index" class="panel compact-panel">
+        <h3>Current student view</h3>
+        <label asp-for="SelectedStudentId">Student</label>
+        <select name="studentId">
+            @foreach (var student in Model.Students)
+            {
+                <option value="@student.Id" selected="@(student.Id == selectedStudentId)">@student.FullName</option>
+            }
+        </select>
+        <input type="hidden" name="supervisorId" value="@selectedSupervisorId" />
+        <button type="submit">Switch student</button>
+    </form>
+
+    <form method="get" asp-action="Index" class="panel compact-panel">
+        <h3>Current supervisor view</h3>
+        <label asp-for="SelectedSupervisorId">Supervisor</label>
+        <select name="supervisorId">
+            @foreach (var supervisor in Model.Supervisors)
+            {
+                <option value="@supervisor.Id" selected="@(supervisor.Id == selectedSupervisorId)">@supervisor.FullName</option>
+            }
+        </select>
+        <input type="hidden" name="studentId" value="@selectedStudentId" />
+        <button type="submit">Switch supervisor</button>
+    </form>
+    <div class="panel compact-panel metrics-panel">
+        <h3>System status</h3>
+        <div class="metric-row"><span>Students</span><strong>@Model.Students.Count</strong></div>
+        <div class="metric-row"><span>Supervisors</span><strong>@Model.Supervisors.Count</strong></div>
+        <div class="metric-row"><span>Areas</span><strong>@Model.ResearchAreas.Count</strong></div>
+        <div class="metric-row"><span>Matches</span><strong>@Model.Matches.Count</strong></div>
+    </div>
+</section>
+
+<section class="dashboard-grid">
+    <article class="panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Student workspace</p>
+                <h3>Submit and track proposals</h3>
+            </div>
+        </div>
+
+        <form asp-action="SubmitProposal" method="post" class="stack-form">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="StudentId" value="@selectedStudentId" />
+            <label>Title</label>
+            <input name="Title" required />
+            <label>Abstract</label>
+            <textarea name="Abstract" rows="3" required></textarea>
+            <label>Description</label>
+            <textarea name="Description" rows="4" required></textarea>
+            <label>Tech stack</label>
+            <input name="TechStack" required />
+            <label>Research area</label>
+            <select name="ResearchAreaId">
+                @foreach (var area in Model.ResearchAreas)
+                {
+                    <option value="@area.Id">@area.Name</option>
+                }
+            </select>
+            <button type="submit">Submit proposal</button>
+        </form>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Proposal ID</th>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var proposal in Model.StudentProposals)
+                {
+                    <tr>
+                        <td>@proposal.ProposalId</td>
+                        <td>@proposal.Title</td>
+                        <td><span class="status-chip status-@proposal.Status.ToString().ToLowerInvariant()">@proposal.Status</span></td>
+                        <td>
+                            @if (proposal.Status != ProposalStatus.Matched)
+                            {
+                                <form asp-action="WithdrawProposal" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="proposalId" value="@proposal.Id" />
+                                    <input type="hidden" name="studentId" value="@selectedStudentId" />
+                                    <button type="submit" class="secondary-button">Withdraw</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span class="muted">Matched</span>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </article>
+
+    <article class="panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Supervisor workspace</p>
+                <h3>Review blind proposals</h3>
+            </div>
+        </div>
+
+        <div class="pill-list">
+            @foreach (var expertise in Model.SupervisorExpertises)
+            {
+                <span class="pill">@expertise.ResearchArea?.Name</span>
+            }
+        </div>
+
+        <div class="proposal-list">
+            @foreach (var proposal in Model.AnonymousProposals)
+            {
+                <div class="proposal-card">
+                    <div class="proposal-head">
+                        <strong>@proposal.ProposalId</strong>
+                        <span class="status-chip status-@proposal.Status.ToString().ToLowerInvariant()">@proposal.Status</span>
+                    </div>
+                    <h4>@proposal.Title</h4>
+                    <p>@proposal.Abstract</p>
+                    <p class="meta-line"><span>@proposal.TechStack</span><span>Research Area ID: @proposal.ResearchAreaId</span></p>
+                    <form asp-action="ExpressInterest" method="post" class="stack-form inline-form">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ProposalId" value="@proposal.Id" />
+                        <input type="hidden" name="SupervisorId" value="@selectedSupervisorId" />
+                        <textarea name="Comments" rows="2" placeholder="Why does this fit your expertise?"></textarea>
+                        <button type="submit">Express interest</button>
+                    </form>
+                </div>
+            }
+        </div>
+    </article>
+
+    <article class="panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Coordinator workspace</p>
+                <h3>Manage users and areas</h3>
+            </div>
+        </div>
+
+        <form asp-action="RegisterUser" method="post" class="stack-form split-form">
+            @Html.AntiForgeryToken()
+            <label>Full name</label>
+            <input name="FullName" required />
+            <label>Email</label>
+            <input name="Email" type="email" required />
+            <label>Password</label>
+            <input name="Password" type="password" required value="Password123!" />
+            <label>Role</label>
+            <select name="Role">
+                <option value="Student">Student</option>
+                <option value="Supervisor">Supervisor</option>
+                <option value="ModuleLeader">Module Leader</option>
+            </select>
+            <button type="submit">Create account</button>
+        </form>
+
+        <form asp-action="CreateResearchArea" method="post" class="stack-form split-form">
+            @Html.AntiForgeryToken()
+            <label>Research area name</label>
+            <input name="Name" required />
+            <label>Description</label>
+            <textarea name="Description" rows="2"></textarea>
+            <button type="submit">Add area</button>
+        </form>
+
+        <form asp-action="AssignExpertise" method="post" class="stack-form split-form">
+            @Html.AntiForgeryToken()
+            <label>Supervisor</label>
+            <select name="SupervisorId">
+                @foreach (var supervisor in Model.Supervisors)
+                {
+                    <option value="@supervisor.Id">@supervisor.FullName</option>
+                }
+            </select>
+            <label>Research area</label>
+            <select name="ResearchAreaId">
+                @foreach (var area in Model.ResearchAreas)
+                {
+                    <option value="@area.Id">@area.Name</option>
+                }
+            </select>
+            <button type="submit">Assign expertise</button>
+        </form>
+    </article>
+ </section>
+
+<section class="panel full-width-panel">
+    <div class="panel-heading">
+        <div>
+            <p class="eyebrow">Allocation oversight</p>
+            <h3>Blind-match workflow status</h3>
+        </div>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Proposal</th>
+                    <th>Supervisor</th>
+                    <th>Student</th>
+                    <th>Status</th>
+                    <th>Decision</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var match in Model.Matches)
+            {
+                <tr>
+                    <td>@match.Proposal?.ProposalId - @match.Proposal?.Title</td>
+                    <td>@match.Supervisor?.FullName</td>
+                    <td>
+                        @if (match.Status == MatchStatus.Matched)
+                        {
+                            @match.Proposal?.Student?.FullName
+                        }
+                        else
+                        {
+                            <span class="muted">Hidden until confirmation</span>
+                        }
+                    </td>
+                    <td><span class="status-chip status-@match.Status.ToString().ToLowerInvariant()">@match.Status</span></td>
+                    <td>
+                        @if (match.Status == MatchStatus.Interested)
+                        {
+                            <div class="action-group">
+                                <form asp-action="ConfirmMatch" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="matchId" value="@match.Id" />
+                                    <input type="hidden" name="studentId" value="@selectedStudentId" />
+                                    <input type="hidden" name="supervisorId" value="@selectedSupervisorId" />
+                                    <button type="submit">Confirm</button>
+                                </form>
+                                <form asp-action="DeclineMatch" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="matchId" value="@match.Id" />
+                                    <input type="hidden" name="studentId" value="@selectedStudentId" />
+                                    <input type="hidden" name="supervisorId" value="@selectedSupervisorId" />
+                                    <button type="submit" class="secondary-button">Decline</button>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="muted">No action</span>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</section>

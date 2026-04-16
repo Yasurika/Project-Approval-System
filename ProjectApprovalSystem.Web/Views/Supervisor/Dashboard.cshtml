@@ -1,0 +1,138 @@
+@model SupervisorDashboardViewModel
+@{
+    ViewData["Title"] = "Supervisor Dashboard";
+}
+
+<section class="page-head">
+    <div>
+        <p class="page-kicker">Supervisor Blind-Review Feed</p>
+        <h2>Welcome, @Model.Supervisor.FullName</h2>
+        <p class="muted-text">Review proposals anonymously and confirm matching based on technical merit.</p>
+    </div>
+</section>
+
+@if (TempData["StatusMessage"] is string status)
+{
+    <div class="alert alert-success">@status</div>
+}
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+@if (Model.RevealedMatch != null)
+{
+    <section class="reveal-card">
+        <h3>Match Confirmed - Identity Revealed</h3>
+        <div class="reveal-grid">
+            <div><strong>Student Name:</strong> @Model.RevealedMatch.Proposal?.Student?.FullName</div>
+            <div><strong>Student Email:</strong> @Model.RevealedMatch.Proposal?.Student?.Email</div>
+            <div><strong>Proposal:</strong> @Model.RevealedMatch.Proposal?.Title</div>
+        </div>
+    </section>
+}
+
+<section class="content-grid two-col">
+    <article class="card">
+        <h3>Expertise Selection</h3>
+        <form asp-action="SaveExpertise" method="post" class="stack-form">
+            @Html.AntiForgeryToken()
+            <div class="checkbox-grid">
+                @foreach (var area in Model.ResearchAreas)
+                {
+                    <label class="check-tag">
+                        <input type="checkbox" name="ResearchAreaIds" value="@area.Id" checked="@Model.SelectedResearchAreaIds.Contains(area.Id)" />
+                        <span>@area.Name</span>
+                    </label>
+                }
+            </div>
+            <button type="submit" class="btn-primary">Save Tags</button>
+        </form>
+    </article>
+
+    <article class="card">
+        <h3>Pending Interests</h3>
+        <div class="table-wrap">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Proposal</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var interest in Model.PendingInterests)
+                {
+                    <tr>
+                        <td>@interest.Proposal?.ProposalId - @interest.Proposal?.Title</td>
+                        <td><span class="pill status-interested">Interested</span></td>
+                        <td style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                            <form asp-action="ConfirmMatch" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="matchId" value="@interest.Id" />
+                                <button type="submit" class="btn-primary">Confirm Match</button>
+                            </form>
+                            <form asp-action="DeclineInterest" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="matchId" value="@interest.Id" />
+                                <button type="submit" class="btn-light">Decline</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </article>
+</section>
+
+<section class="card">
+    <h3>Anonymized Project List</h3>
+    <p class="muted-text">Only Title, Abstract, and Technical Stack are shown. Student identity is hidden.</p>
+    <div class="feed-grid">
+        @foreach (var proposal in Model.AnonymousProposals)
+        {
+            <div class="feed-card">
+                <p class="chip">@proposal.ProposalId</p>
+                <h4>@proposal.Title</h4>
+                <p>@proposal.Abstract</p>
+                <p class="muted-text"><strong>Tech Stack:</strong> @proposal.TechStack</p>
+
+                <form asp-action="ExpressInterest" method="post" class="stack-form compact">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ProposalId" value="@proposal.Id" />
+                    <textarea name="Comments" rows="2" placeholder="Optional comment"></textarea>
+                    <button type="submit" class="btn-primary">Express Interest</button>
+                </form>
+            </div>
+        }
+    </div>
+</section>
+
+<section class="card">
+    <h3>Confirmed Matches</h3>
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Proposal</th>
+                    <th>Student Name</th>
+                    <th>Student Email</th>
+                    <th>Matched At</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var match in Model.ConfirmedMatches)
+            {
+                <tr>
+                    <td>@match.Proposal?.ProposalId - @match.Proposal?.Title</td>
+                    <td>@match.Proposal?.Student?.FullName</td>
+                    <td>@match.Proposal?.Student?.Email</td>
+                    <td>@match.MatchedAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</section>

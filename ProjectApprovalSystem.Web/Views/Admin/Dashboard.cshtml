@@ -1,0 +1,166 @@
+@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Module Leader Dashboard";
+}
+
+<section class="page-head">
+    <div>
+        <p class="page-kicker">Module Leader / Admin Dashboard</p>
+        <h2>Welcome, @Model.AdminUser.FullName</h2>
+        <p class="muted-text">Monitor system activity, manage research areas, and control allocation decisions.</p>
+    </div>
+</section>
+
+@if (TempData["StatusMessage"] is string status)
+{
+    <div class="alert alert-success">@status</div>
+}
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<section class="stats-grid">
+    <div class="stat-card">
+        <p>Pending Proposals</p>
+        <h3>@Model.PendingProposalCount</h3>
+    </div>
+    <div class="stat-card">
+        <p>Under Review</p>
+        <h3>@Model.UnderReviewCount</h3>
+    </div>
+    <div class="stat-card">
+        <p>Matched</p>
+        <h3>@Model.MatchedCount</h3>
+    </div>
+</section>
+
+<section class="content-grid two-col">
+    <article class="card">
+        <h3>Research Area Management</h3>
+        <form asp-action="CreateResearchArea" method="post" class="stack-form">
+            @Html.AntiForgeryToken()
+            <label>New Area Name</label>
+            <input name="Name" required />
+            <label>Description</label>
+            <textarea name="Description" rows="2"></textarea>
+            <button type="submit" class="btn-primary">Add Area</button>
+        </form>
+
+        <hr class="line" />
+
+        <h4>Edit Existing Area</h4>
+        <form asp-action="UpdateResearchArea" method="post" class="stack-form">
+            @Html.AntiForgeryToken()
+            <label>Area</label>
+            <select name="AreaId">
+                @foreach (var area in Model.ResearchAreas)
+                {
+                    <option value="@area.Id">@area.Name</option>
+                }
+            </select>
+            <label>Updated Name</label>
+            <input name="Name" required />
+            <label>Updated Description</label>
+            <textarea name="Description" rows="2"></textarea>
+            <button type="submit" class="btn-light">Update Area</button>
+        </form>
+    </article>
+
+    <article class="card">
+        <h3>Create User Account</h3>
+        <form asp-action="CreateUser" method="post" class="stack-form">
+            @Html.AntiForgeryToken()
+            <label>Full Name</label>
+            <input name="FullName" required />
+            <label>Email</label>
+            <input name="Email" type="email" required />
+            <label>Password</label>
+            <input name="Password" type="text" value="Password123!" required />
+            <label>Role</label>
+            <select name="Role">
+                <option value="Student">Student</option>
+                <option value="Supervisor">Supervisor</option>
+                <option value="ModuleLeader">Module Leader</option>
+                <option value="Administrator">Administrator</option>
+            </select>
+            <button type="submit" class="btn-primary">Create User</button>
+        </form>
+
+        <hr class="line" />
+
+        <h4>Active Users</h4>
+        <div class="table-wrap">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var user in Model.Users)
+                {
+                    <tr>
+                        <td>@user.FullName</td>
+                        <td>@user.Email</td>
+                        <td>@user.Role</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </article>
+</section>
+
+<section class="card">
+    <h3>Master Match List</h3>
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Proposal</th>
+                    <th>Student</th>
+                    <th>Supervisor</th>
+                    <th>Status</th>
+                    <th>Interested At</th>
+                    <th>Matched At</th>
+                    <th>Manual Intervention</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var match in Model.MasterMatches)
+            {
+                <tr>
+                    <td>@match.Proposal?.ProposalId - @match.Proposal?.Title</td>
+                    <td>@match.Proposal?.Student?.FullName (@match.Proposal?.Student?.Email)</td>
+                    <td>@match.Supervisor?.FullName</td>
+                    <td><span class="pill status-@match.Status.ToString().ToLowerInvariant()">@match.Status</span></td>
+                    <td>@match.InterestedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                    <td>@(match.MatchedAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "-")</td>
+                    <td>
+                        <form asp-action="ReassignMatch" method="post" class="stack-form compact">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="MatchId" value="@match.Id" />
+                            <select name="NewSupervisorId">
+                                @foreach (var supervisor in Model.Supervisors)
+                                {
+                                    <option value="@supervisor.Id" selected="@(supervisor.Id == match.SupervisorId)">@supervisor.FullName</option>
+                                }
+                            </select>
+                            <button type="submit" class="btn-light">Reassign</button>
+                        </form>
+
+                        <form asp-action="ForceUnmatch" method="post" class="mt-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="matchId" value="@match.Id" />
+                            <button type="submit" class="btn-light">Remove Match</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</section>

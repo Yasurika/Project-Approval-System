@@ -1,0 +1,120 @@
+@model StudentDashboardViewModel
+@{
+    ViewData["Title"] = "Student Dashboard";
+}
+
+<section class="page-head">
+    <div>
+        <p class="page-kicker">Student Dashboard</p>
+        <h2>Welcome, @Model.Student.FullName</h2>
+        <p class="muted-text">Submit your proposal and track progress from pending to matched.</p>
+    </div>
+</section>
+
+@if (TempData["StatusMessage"] is string status)
+{
+    <div class="alert alert-success">@status</div>
+}
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<section class="timeline-card">
+    <h3>Status Timeline</h3>
+    <div class="timeline-track">
+        <div class="timeline-node @(Model.TimelineStage == "Pending" || Model.TimelineStage == "Under Review" || Model.TimelineStage == "Matched" ? "active" : "")">Pending</div>
+        <div class="timeline-node @(Model.TimelineStage == "Under Review" || Model.TimelineStage == "Matched" ? "active" : "")">Under Review</div>
+        <div class="timeline-node @(Model.TimelineStage == "Matched" ? "active" : "")">Matched</div>
+    </div>
+</section>
+
+@if (Model.MatchedSupervisor != null)
+{
+    <section class="reveal-card">
+        <h3>The Reveal</h3>
+        <p>Your project is matched. Supervisor details are now visible.</p>
+        <div class="reveal-grid">
+            <div><strong>Name:</strong> @Model.MatchedSupervisor.FullName</div>
+            <div><strong>Email:</strong> @Model.MatchedSupervisor.Email</div>
+        </div>
+    </section>
+}
+
+<section class="content-grid two-col">
+    <article class="card">
+        <h3>Proposal Submission Form</h3>
+        <form asp-action="SubmitProposal" method="post" class="stack-form">
+            @Html.AntiForgeryToken()
+            <label>Project Title</label>
+            <input name="Title" required />
+            <label>Abstract</label>
+            <textarea name="Abstract" rows="3" required></textarea>
+            <label>Technical Stack</label>
+            <input name="TechStack" placeholder="React, C#, SQL Server" required />
+            <label>Description</label>
+            <textarea name="Description" rows="4" required></textarea>
+            <label>Research Area</label>
+            <select name="ResearchAreaId" required>
+                @foreach (var area in Model.ResearchAreas)
+                {
+                    <option value="@area.Id">@area.Name</option>
+                }
+            </select>
+            <button type="submit" class="btn-primary">Submit Proposal</button>
+        </form>
+    </article>
+
+    <article class="card">
+        <h3>My Proposals</h3>
+        <div class="table-wrap">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Proposal ID</th>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var proposal in Model.Proposals)
+                {
+                    <tr>
+                        <td>@proposal.ProposalId</td>
+                        <td>@proposal.Title</td>
+                        <td><span class="pill status-@proposal.Status.ToString().ToLowerInvariant()">@proposal.Status</span></td>
+                        <td>
+                            @if (proposal.Status == ProposalStatus.Pending)
+                            {
+                                <details>
+                                    <summary class="btn-light">Edit / Withdraw</summary>
+                                    <form asp-action="EditProposal" method="post" class="stack-form compact mt-2">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="ProposalId" value="@proposal.Id" />
+                                        <input name="Title" value="@proposal.Title" required />
+                                        <textarea name="Abstract" rows="2" required>@proposal.Abstract</textarea>
+                                        <input name="TechStack" value="@proposal.TechStack" required />
+                                        <textarea name="Description" rows="2" required>@proposal.Description</textarea>
+                                        <button type="submit" class="btn-primary">Save Changes</button>
+                                    </form>
+
+                                    <form asp-action="WithdrawProposal" method="post" class="mt-2">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="proposalId" value="@proposal.Id" />
+                                        <button type="submit" class="btn-light">Withdraw</button>
+                                    </form>
+                                </details>
+                            }
+                            else
+                            {
+                                <span class="muted-text">-</span>
+                            }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </article>
+</section>
