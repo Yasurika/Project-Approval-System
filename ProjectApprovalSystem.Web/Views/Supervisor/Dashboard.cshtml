@@ -89,15 +89,23 @@
 
 <section class="card">
     <h3>Anonymized Project List</h3>
-    <p class="muted-text">Only Title, Abstract, and Technical Stack are shown. Student identity is hidden.</p>
+    <p class="muted-text">All project details are shown here while student identity remains hidden.</p>
     <div class="feed-grid">
         @foreach (var proposal in Model.AnonymousProposals)
         {
             <div class="feed-card">
                 <p class="chip">@proposal.ProposalId</p>
                 <h4>@proposal.Title</h4>
-                <p>@proposal.Abstract</p>
-                <p class="muted-text"><strong>Tech Stack:</strong> @proposal.TechStack</p>
+                <div class="proposal-details-scroll">
+                    <p><strong>Abstract</strong></p>
+                    <p>@proposal.Abstract</p>
+                    <p><strong>Description</strong></p>
+                    <p>@(string.IsNullOrWhiteSpace(proposal.Description) ? "No description provided." : proposal.Description)</p>
+                    <p class="muted-text"><strong>Tech Stack:</strong> @proposal.TechStack</p>
+                    <p class="muted-text"><strong>Research Area:</strong> @(proposal.ResearchArea?.Name ?? $"Area #{proposal.ResearchAreaId}")</p>
+                    <p class="muted-text"><strong>Submitted:</strong> @proposal.SubmittedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</p>
+                    <p class="muted-text"><strong>Status:</strong> @proposal.Status</p>
+                </div>
 
                 <form asp-action="ExpressInterest" method="post" class="stack-form compact">
                     @Html.AntiForgeryToken()

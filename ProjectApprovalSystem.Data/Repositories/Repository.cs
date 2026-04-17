@@ -144,6 +144,15 @@ public class ProposalRepository : Repository<Proposal>, IProposalRepository
                 Description = p.Description,
                 TechStack = p.TechStack,
                 ResearchAreaId = p.ResearchAreaId,
+                ResearchArea = p.ResearchArea == null
+                    ? null
+                    : new ResearchArea
+                    {
+                        Id = p.ResearchArea.Id,
+                        Name = p.ResearchArea.Name,
+                        Description = p.ResearchArea.Description,
+                        IsActive = p.ResearchArea.IsActive
+                    },
                 Status = p.Status,
                 SubmittedAt = p.SubmittedAt,
                 UpdatedAt = p.UpdatedAt,

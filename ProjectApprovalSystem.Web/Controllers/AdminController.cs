@@ -53,12 +53,18 @@ public class AdminController : Controller
             .Where(user => user.Role == UserRole.Supervisor)
             .ToList();
 
+        var students = users
+            .Where(user => user.Role == UserRole.Student)
+            .ToList();
+
         var vm = new AdminDashboardViewModel
         {
             AdminUser = adminUser,
             PendingProposalCount = pendingProposals,
             UnderReviewCount = underReview,
             MatchedCount = matched,
+            RegisteredStudentCount = students.Count,
+            RegisteredSupervisorCount = supervisors.Count,
             MasterMatches = masterMatches,
             ResearchAreas = areas,
             Users = users,

@@ -316,6 +316,18 @@ h4 {
     border-radius: 14px;
     padding: 0.9rem;
     background: #fff;
+    display: grid;
+    gap: 0.55rem;
+}
+
+.proposal-details-scroll {
+    max-height: 14rem;
+    overflow-y: auto;
+    padding-right: 0.35rem;
+}
+
+.proposal-details-scroll p {
+    margin: 0 0 0.45rem;
 }
 
 .chip {

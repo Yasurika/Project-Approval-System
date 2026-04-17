@@ -63,6 +63,8 @@ public class AdminDashboardViewModel
     public int PendingProposalCount { get; init; }
     public int UnderReviewCount { get; init; }
     public int MatchedCount { get; init; }
+    public int RegisteredStudentCount { get; init; }
+    public int RegisteredSupervisorCount { get; init; }
     public required List<Match> MasterMatches { get; init; }
     public required List<ResearchArea> ResearchAreas { get; init; }
     public required List<User> Users { get; init; }
