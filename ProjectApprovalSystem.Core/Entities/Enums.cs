@@ -31,3 +31,12 @@ public enum MatchStatus
     Matched = 2,
     Declined = 3
 }
+
+/// <summary>
+/// Enum representing invitation state for additional project group members.
+/// </summary>
+public enum GroupInviteStatus
+{
+    Pending = 1,
+    Accepted = 2
+}

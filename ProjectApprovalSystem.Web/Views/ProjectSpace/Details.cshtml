@@ -1,0 +1,197 @@
+@model ProjectSpaceViewModel
+@{
+    ViewData["Title"] = "Project Space";
+}
+
+<section class="page-head">
+    <div>
+        <p class="page-kicker">Project Collaboration Space</p>
+        <h2>@Model.Proposal.ProposalId - @Model.Proposal.Title</h2>
+        <p class="muted-text">Project details, progress tracking, and matched-team communication.</p>
+    </div>
+</section>
+
+@if (TempData["StatusMessage"] is string status)
+{
+    <div class="alert alert-success">@status</div>
+}
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+<section class="timeline-card">
+    <h3>Project Progress</h3>
+    <div class="timeline-track">
+        <div class="timeline-node @(Model.ProgressStage == "Pending" || Model.ProgressStage == "Under Review" || Model.ProgressStage == "Matched" ? "active" : "")">Pending</div>
+        <div class="timeline-node @(Model.ProgressStage == "Under Review" || Model.ProgressStage == "Matched" ? "active" : "")">Under Review</div>
+        <div class="timeline-node @(Model.ProgressStage == "Matched" ? "active" : "")">Matched</div>
+    </div>
+</section>
+
+<section class="content-grid two-col">
+    <article class="card">
+        <h3>Project Details</h3>
+        <div class="project-details-scroll">
+            <p><strong>Proposal ID:</strong> @Model.Proposal.ProposalId</p>
+            <p><strong>Research Area:</strong> @Model.Proposal.ResearchArea?.Name</p>
+            <p><strong>Status:</strong> <span class="pill status-@Model.Proposal.Status.ToString().ToLowerInvariant()">@Model.Proposal.Status</span></p>
+            <p><strong>Submitted:</strong> @Model.Proposal.SubmittedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</p>
+            <p><strong>Last Updated:</strong> @(Model.Proposal.UpdatedAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "-")</p>
+            <p><strong>Group Leader:</strong> @Model.GroupLeader.FullName (@Model.GroupLeader.Email)</p>
+            <p><strong>Matched Supervisor:</strong> @(Model.MatchedSupervisor != null ? $"{Model.MatchedSupervisor.FullName} ({Model.MatchedSupervisor.Email})" : "Not confirmed yet")</p>
+            <p><strong>Abstract:</strong> @Model.Proposal.Abstract</p>
+            <p><strong>Description:</strong> @Model.Proposal.Description</p>
+            <p><strong>Tech Stack:</strong> @Model.Proposal.TechStack</p>
+        </div>
+    </article>
+
+    <article class="card">
+        <h3>Group Members</h3>
+        <p class="muted-text">Leader can add/remove extra students from this project team.</p>
+
+        <div class="table-wrap">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role in Group</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>@Model.GroupLeader.FullName</td>
+                        <td>@Model.GroupLeader.Email</td>
+                        <td><span class="pill status-matched">Leader</span></td>
+                        <td>-</td>
+                    </tr>
+                    @foreach (var member in Model.GroupMembers)
+                    {
+                        <tr>
+                            <td>@member.FullName</td>
+                            <td>@member.Email</td>
+                            <td><span class="pill status-interested">Member</span></td>
+                            <td>
+                                @if (Model.IsCurrentUserGroupLeader)
+                                {
+                                    <form asp-action="RemoveMember" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="ProposalId" value="@Model.Proposal.Id" />
+                                        <input type="hidden" name="StudentId" value="@member.Id" />
+                                        <button type="submit" class="btn-light">Remove</button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="muted-text">-</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.IsCurrentUserGroupLeader)
+        {
+            <hr class="line" />
+            <h4>Pending Invitations</h4>
+            @if (Model.PendingInvitations.Count == 0)
+            {
+                <p class="muted-text">No pending invitations.</p>
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Email</th>
+                                <th>Invited At</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var pending in Model.PendingInvitations)
+                        {
+                            <tr>
+                                <td>@pending.Student?.FullName</td>
+                                <td>@pending.Student?.Email</td>
+                                <td>@pending.AddedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                                <td>
+                                    <form asp-action="RemoveMember" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="ProposalId" value="@Model.Proposal.Id" />
+                                        <input type="hidden" name="StudentId" value="@pending.StudentId" />
+                                        <button type="submit" class="btn-light">Cancel Invite</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            <hr class="line" />
+            <h4>Add Student Members</h4>
+            <form asp-action="AddMember" method="post" class="stack-form">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="ProposalId" value="@Model.Proposal.Id" />
+                <label>Select Student (scrollable list)</label>
+                <select name="StudentId" size="6" class="scroll-select" required>
+                    @foreach (var student in Model.AvailableStudentsToAdd)
+                    {
+                        <option value="@student.Id">@student.FullName (@student.Email)</option>
+                    }
+                </select>
+                <button type="submit" class="btn-primary">Send Invitation</button>
+            </form>
+        }
+    </article>
+</section>
+
+<section class="card">
+    <h3>Project Chat (Supervisor + Group Students)</h3>
+
+    @if (!Model.IsChatEnabled)
+    {
+        <div class="alert alert-warning mb-0">
+            Chat will be enabled after the supervisor confirms this project match.
+        </div>
+    }
+    else
+    {
+        <div class="chat-box">
+            @if (Model.ChatMessages.Count == 0)
+            {
+                <p class="muted-text">No messages yet. Start the discussion.</p>
+            }
+            else
+            {
+                @foreach (var message in Model.ChatMessages)
+                {
+                    var isMine = message.SenderId == Model.CurrentUser.Id;
+                    <div class="chat-message @(isMine ? "mine" : string.Empty)">
+                        <div class="chat-meta">
+                            <strong>@message.Sender?.FullName</strong>
+                            <span>@message.SentAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
+                        </div>
+                        <div class="chat-text">@message.MessageText</div>
+                    </div>
+                }
+            }
+        </div>
+
+        <form asp-action="PostMessage" method="post" class="stack-form mt-3">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="ProposalId" value="@Model.Proposal.Id" />
+            <label>Message</label>
+            <textarea name="MessageText" rows="3" maxlength="2000" placeholder="Type message for supervisor and group students" required></textarea>
+            <button type="submit" class="btn-primary">Send Message</button>
+        </form>
+    }
+</section>

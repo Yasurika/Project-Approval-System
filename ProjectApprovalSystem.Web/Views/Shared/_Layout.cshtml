@@ -18,7 +18,12 @@
     var controller = ViewContext.RouteData.Values["controller"]?.ToString();
     var action = ViewContext.RouteData.Values["action"]?.ToString();
     var isAuthPage = !isAuthenticated && controller == "Account" && action == "Login";
-    string NavClass(string targetController) => controller == targetController ? "active" : string.Empty;
+    string NavClass(string targetController, string? targetAction = null)
+    {
+        var controllerMatch = string.Equals(controller, targetController, StringComparison.OrdinalIgnoreCase);
+        var actionMatch = targetAction == null || string.Equals(action, targetAction, StringComparison.OrdinalIgnoreCase);
+        return controllerMatch && actionMatch ? "active" : string.Empty;
+    }
 }
 
     <div class="app-shell @(isAuthPage ? "auth-shell" : string.Empty)">
@@ -34,15 +39,35 @@
                 <nav class="sidebar-nav">
                     @if (role == "Student")
                     {
-                        <a class="@NavClass("Student")" href="/Student/Dashboard">Overview</a>
+                        <div class="nav-group">
+                            <p class="nav-group-title">Workspace</p>
+                            <a class="@NavClass("Student", "Dashboard")" href="/Student/Dashboard">Dashboard</a>
+                            <a class="@NavClass("ProjectSpace", "Index")" href="/ProjectSpace/Index">Project Spaces</a>
+                        </div>
+
+                        <div class="nav-group">
+                            <p class="nav-group-title">Collaboration</p>
+                            <a class="@NavClass("ProjectSpace", "Index")" href="/ProjectSpace/Index">Invitations & Chat</a>
+                        </div>
                     }
                     else if (role == "Supervisor")
                     {
-                        <a class="@NavClass("Supervisor")" href="/Supervisor/Dashboard">Blind Review Feed</a>
+                        <div class="nav-group">
+                            <p class="nav-group-title">Review</p>
+                            <a class="@NavClass("Supervisor", "Dashboard")" href="/Supervisor/Dashboard">Blind Review Feed</a>
+                        </div>
+
+                        <div class="nav-group">
+                            <p class="nav-group-title">Collaboration</p>
+                            <a class="@NavClass("ProjectSpace", "Index")" href="/ProjectSpace/Index">Matched Project Spaces</a>
+                        </div>
                     }
                     else if (role == "ModuleLeader" || role == "Administrator")
                     {
-                        <a class="@NavClass("Admin")" href="/Admin/Dashboard">Management Overview</a>
+                        <div class="nav-group">
+                            <p class="nav-group-title">Administration</p>
+                            <a class="@NavClass("Admin", "Dashboard")" href="/Admin/Dashboard">Management Overview</a>
+                        </div>
                     }
                 </nav>
 

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProjectApprovalSystem.Data.Context;
 
@@ -11,9 +12,11 @@ using ProjectApprovalSystem.Data.Context;
 namespace ProjectApprovalSystem.Data.Migrations
 {
     [DbContext(typeof(PasDbContext))]
-    partial class PasDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260418112619_AddGroupInvitationAcceptance")]
+    partial class AddGroupInvitationAcceptance
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

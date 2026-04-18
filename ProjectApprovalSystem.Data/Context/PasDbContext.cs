@@ -19,6 +19,8 @@ public class PasDbContext : DbContext
     public DbSet<Proposal> Proposals { get; set; } = null!;
     public DbSet<SupervisorExpertise> SupervisorExpertises { get; set; } = null!;
     public DbSet<Match> Matches { get; set; } = null!;
+    public DbSet<ProposalGroupMember> ProposalGroupMembers { get; set; } = null!;
+    public DbSet<ProjectChatMessage> ProjectChatMessages { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -44,6 +46,16 @@ public class PasDbContext : DbContext
             entity.HasMany(e => e.StudentProposals)
                 .WithOne(p => p.Student)
                 .HasForeignKey(p => p.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(e => e.GroupMemberships)
+                .WithOne(pm => pm.Student)
+                .HasForeignKey(pm => pm.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(e => e.ProjectChatMessages)
+                .WithOne(cm => cm.Sender)
+                .HasForeignKey(cm => cm.SenderId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasMany(e => e.Expertises)
@@ -113,6 +125,16 @@ public class PasDbContext : DbContext
                 .WithOne(m => m.Proposal)
                 .HasForeignKey(m => m.ProposalId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(e => e.GroupMembers)
+                .WithOne(pm => pm.Proposal)
+                .HasForeignKey(pm => pm.ProposalId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(e => e.ChatMessages)
+                .WithOne(cm => cm.Proposal)
+                .HasForeignKey(cm => cm.ProposalId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Configure SupervisorExpertise entity
@@ -156,6 +178,44 @@ public class PasDbContext : DbContext
             // Ensure one supervisor can only express interest in a proposal once
             entity.HasIndex(e => new { e.ProposalId, e.SupervisorId })
                 .IsUnique();
+        });
+
+        modelBuilder.Entity<ProposalGroupMember>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.Proposal)
+                .WithMany(p => p.GroupMembers)
+                .HasForeignKey(e => e.ProposalId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Student)
+                .WithMany(u => u.GroupMemberships)
+                .HasForeignKey(e => e.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => new { e.ProposalId, e.StudentId })
+                .IsUnique();
+        });
+
+        modelBuilder.Entity<ProjectChatMessage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.MessageText)
+                .IsRequired()
+                .HasMaxLength(2000);
+
+            entity.HasOne(e => e.Proposal)
+                .WithMany(p => p.ChatMessages)
+                .HasForeignKey(e => e.ProposalId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Sender)
+                .WithMany(u => u.ProjectChatMessages)
+                .HasForeignKey(e => e.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => new { e.ProposalId, e.SentAt });
         });
     }
 }

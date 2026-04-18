@@ -79,6 +79,8 @@ public class Proposal
 
     // Navigation properties
     public ICollection<Match> Matches { get; set; } = [];
+    public ICollection<ProposalGroupMember> GroupMembers { get; set; } = [];
+    public ICollection<ProjectChatMessage> ChatMessages { get; set; } = [];
 
     public override string ToString() => $"{ProposalId} - {Title}";
 }

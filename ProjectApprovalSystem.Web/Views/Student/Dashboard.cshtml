@@ -41,6 +41,43 @@
     </section>
 }
 
+@if (Model.PendingGroupInvites.Count > 0)
+{
+    <section class="card">
+        <h3>Pending Group Invitations</h3>
+        <p class="muted-text">Accept an invitation to join the project group and access project details/chat.</p>
+        <div class="table-wrap">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Proposal</th>
+                        <th>Group Leader</th>
+                        <th>Invited At</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var invite in Model.PendingGroupInvites)
+                {
+                    <tr>
+                        <td>@invite.ProposalCode - @invite.ProposalTitle</td>
+                        <td>@invite.GroupLeaderName</td>
+                        <td>@invite.InvitedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>
+                            <form action="/ProjectSpace/AcceptInvite" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="InvitationId" value="@invite.InvitationId" />
+                                <button type="submit" class="btn-primary">Accept</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}
+
 <section class="content-grid two-col">
     <article class="card">
         <h3>Proposal Submission Form</h3>
@@ -74,6 +111,7 @@
                         <th>Proposal ID</th>
                         <th>Title</th>
                         <th>Status</th>
+                        <th>Project Space</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -84,6 +122,9 @@
                         <td>@proposal.ProposalId</td>
                         <td>@proposal.Title</td>
                         <td><span class="pill status-@proposal.Status.ToString().ToLowerInvariant()">@proposal.Status</span></td>
+                        <td>
+                            <a class="btn-light" href="/ProjectSpace/Details?proposalId=@proposal.Id">Open</a>
+                        </td>
                         <td>
                             @if (proposal.Status == ProposalStatus.Pending)
                             {

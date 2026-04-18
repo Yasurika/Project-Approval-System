@@ -36,6 +36,22 @@ public class StudentController : Controller
         var proposals = (await _proposalService.GetStudentProposalsAsync(student.Id)).OrderByDescending(proposal => proposal.SubmittedAt).ToList();
         var areas = (await _researchAreaService.GetAllAreasAsync()).OrderBy(area => area.Name).ToList();
 
+        var pendingInvites = await _dbContext.ProposalGroupMembers
+            .Include(item => item.Proposal)
+                .ThenInclude(proposal => proposal!.Student)
+            .Where(item => item.StudentId == student.Id && item.InviteStatus == GroupInviteStatus.Pending)
+            .OrderByDescending(item => item.AddedAt)
+            .Select(item => new StudentGroupInviteViewModel
+            {
+                InvitationId = item.Id,
+                ProposalId = item.ProposalId,
+                ProposalCode = item.Proposal!.ProposalId,
+                ProposalTitle = item.Proposal.Title,
+                GroupLeaderName = item.Proposal.Student!.FullName,
+                InvitedAt = item.AddedAt
+            })
+            .ToListAsync();
+
         var matches = await _dbContext.Matches
             .Include(match => match.Supervisor)
             .Include(match => match.Proposal)
@@ -55,6 +71,7 @@ public class StudentController : Controller
             Student = student,
             Proposals = proposals,
             ResearchAreas = areas,
+            PendingGroupInvites = pendingInvites,
             TimelineStage = timelineStage,
             MatchedSupervisor = matchedSupervisor
         };

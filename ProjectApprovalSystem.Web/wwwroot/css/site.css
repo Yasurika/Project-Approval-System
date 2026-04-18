@@ -60,9 +60,22 @@ h4 {
 
 .sidebar-nav {
     display: grid;
-    gap: 0.7rem;
+    gap: 1rem;
     align-content: start;
     grid-auto-rows: max-content;
+}
+
+.nav-group {
+    display: grid;
+    gap: 0.55rem;
+}
+
+.nav-group-title {
+    margin: 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(220, 231, 255, 0.7);
 }
 
 .sidebar-nav a {
@@ -316,18 +329,68 @@ h4 {
     border-radius: 14px;
     padding: 0.9rem;
     background: #fff;
-    display: grid;
-    gap: 0.55rem;
 }
 
 .proposal-details-scroll {
-    max-height: 14rem;
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: 0.35rem;
+    margin-bottom: 0.65rem;
+}
+
+.proposal-details-scroll p {
+    margin-bottom: 0.55rem;
+}
+
+.project-details-scroll {
+    max-height: 360px;
     overflow-y: auto;
     padding-right: 0.35rem;
 }
 
-.proposal-details-scroll p {
-    margin: 0 0 0.45rem;
+.project-details-scroll p {
+    margin-bottom: 0.6rem;
+}
+
+.scroll-select {
+    max-height: 190px;
+}
+
+.chat-box {
+    max-height: 420px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.75rem;
+    background: #fbfdff;
+    display: grid;
+    gap: 0.65rem;
+}
+
+.chat-message {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.55rem 0.65rem;
+    background: #ffffff;
+}
+
+.chat-message.mine {
+    border-color: #b7cff7;
+    background: #eef4ff;
+}
+
+.chat-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.6rem;
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 0.25rem;
+}
+
+.chat-text {
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .chip {

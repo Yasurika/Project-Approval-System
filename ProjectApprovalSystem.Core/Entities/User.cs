@@ -49,6 +49,8 @@ public class User
 
     // Navigation properties
     public ICollection<Proposal> StudentProposals { get; set; } = [];
+    public ICollection<ProposalGroupMember> GroupMemberships { get; set; } = [];
+    public ICollection<ProjectChatMessage> ProjectChatMessages { get; set; } = [];
     public ICollection<SupervisorExpertise> Expertises { get; set; } = [];
     public ICollection<Match> Matches { get; set; } = [];
 

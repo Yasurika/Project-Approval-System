@@ -53,9 +53,8 @@ public class AdminController : Controller
             .Where(user => user.Role == UserRole.Supervisor)
             .ToList();
 
-        var students = users
-            .Where(user => user.Role == UserRole.Student)
-            .ToList();
+        var activeStudents = users.Count(user => user.Role == UserRole.Student);
+        var activeSupervisors = supervisors.Count;
 
         var vm = new AdminDashboardViewModel
         {
@@ -63,8 +62,8 @@ public class AdminController : Controller
             PendingProposalCount = pendingProposals,
             UnderReviewCount = underReview,
             MatchedCount = matched,
-            RegisteredStudentCount = students.Count,
-            RegisteredSupervisorCount = supervisors.Count,
+            ActiveStudentCount = activeStudents,
+            ActiveSupervisorCount = activeSupervisors,
             MasterMatches = masterMatches,
             ResearchAreas = areas,
             Users = users,

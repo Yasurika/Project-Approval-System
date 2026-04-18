@@ -13,8 +13,19 @@ public class StudentDashboardViewModel
     public required User Student { get; init; }
     public required List<ResearchArea> ResearchAreas { get; init; }
     public required List<Proposal> Proposals { get; init; }
+    public required List<StudentGroupInviteViewModel> PendingGroupInvites { get; init; }
     public required string TimelineStage { get; init; }
     public User? MatchedSupervisor { get; init; }
+}
+
+public class StudentGroupInviteViewModel
+{
+    public int InvitationId { get; init; }
+    public int ProposalId { get; init; }
+    public required string ProposalCode { get; init; }
+    public required string ProposalTitle { get; init; }
+    public required string GroupLeaderName { get; init; }
+    public DateTime InvitedAt { get; init; }
 }
 
 public class SubmitStudentProposalForm
@@ -63,8 +74,8 @@ public class AdminDashboardViewModel
     public int PendingProposalCount { get; init; }
     public int UnderReviewCount { get; init; }
     public int MatchedCount { get; init; }
-    public int RegisteredStudentCount { get; init; }
-    public int RegisteredSupervisorCount { get; init; }
+    public int ActiveStudentCount { get; init; }
+    public int ActiveSupervisorCount { get; init; }
     public required List<Match> MasterMatches { get; init; }
     public required List<ResearchArea> ResearchAreas { get; init; }
     public required List<User> Users { get; init; }
@@ -96,4 +107,59 @@ public class ReassignMatchAdminForm
 {
     public int MatchId { get; set; }
     public int NewSupervisorId { get; set; }
+}
+
+public class ProjectSpaceViewModel
+{
+    public required Proposal Proposal { get; init; }
+    public required User CurrentUser { get; init; }
+    public required User GroupLeader { get; init; }
+    public User? MatchedSupervisor { get; init; }
+    public required List<User> GroupMembers { get; init; }
+    public required List<ProposalGroupMember> PendingInvitations { get; init; }
+    public required List<User> AvailableStudentsToAdd { get; init; }
+    public required List<ProjectChatMessage> ChatMessages { get; init; }
+    public bool IsCurrentUserGroupLeader { get; init; }
+    public bool IsCurrentUserParticipant { get; init; }
+    public bool IsChatEnabled { get; init; }
+    public string ProgressStage { get; init; } = "Pending";
+}
+
+public class ProjectSpaceIndexViewModel
+{
+    public required User CurrentUser { get; init; }
+    public required List<ProjectSpaceListItemViewModel> AccessibleProjects { get; init; }
+    public required List<StudentGroupInviteViewModel> PendingInvitations { get; init; }
+}
+
+public class ProjectSpaceListItemViewModel
+{
+    public int ProposalId { get; init; }
+    public required string ProposalCode { get; init; }
+    public required string Title { get; init; }
+    public required string RoleInProject { get; init; }
+    public ProposalStatus ProposalStatus { get; init; }
+}
+
+public class PostProjectChatMessageForm
+{
+    public int ProposalId { get; set; }
+    public required string MessageText { get; set; }
+}
+
+public class AddGroupMemberForm
+{
+    public int ProposalId { get; set; }
+    public int StudentId { get; set; }
+}
+
+public class RemoveGroupMemberForm
+{
+    public int ProposalId { get; set; }
+    public int StudentId { get; set; }
+}
+
+public class AcceptGroupInviteForm
+{
+    public int InvitationId { get; set; }
 }
