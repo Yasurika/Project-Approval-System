@@ -94,5 +94,43 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (() => {
+            const selectors = ".top-bar, .page-head, .card, .timeline-card, .reveal-card, .stat-card, .feed-card, .table-wrap";
+            const targets = Array.from(document.querySelectorAll(selectors));
+
+            if (targets.length > 0) {
+                targets.forEach((element, index) => {
+                    element.classList.add("ui-reveal");
+                    element.style.transitionDelay = `${(index % 10) * 55}ms`;
+                });
+
+                const observer = new IntersectionObserver((entries, obs) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add("is-visible");
+                            obs.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.08, rootMargin: "0px 0px -6% 0px" });
+
+                targets.forEach(element => observer.observe(element));
+            }
+
+            const interactiveCards = document.querySelectorAll(".feed-card, .stat-card");
+            interactiveCards.forEach(card => {
+                card.addEventListener("mousemove", event => {
+                    const rect = card.getBoundingClientRect();
+                    const offsetX = (event.clientX - rect.left) / rect.width - 0.5;
+                    const offsetY = (event.clientY - rect.top) / rect.height - 0.5;
+                    card.style.transform = `translateY(-3px) rotateX(${(-offsetY * 2.5).toFixed(2)}deg) rotateY(${(offsetX * 3.5).toFixed(2)}deg)`;
+                });
+
+                card.addEventListener("mouseleave", () => {
+                    card.style.transform = "";
+                });
+            });
+        })();
+    </script>
 </body>
 </html>
