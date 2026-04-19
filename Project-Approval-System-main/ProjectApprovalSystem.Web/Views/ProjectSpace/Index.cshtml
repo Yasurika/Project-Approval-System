@@ -1,0 +1,95 @@
+@model ProjectSpaceIndexViewModel
+@{
+    ViewData["Title"] = "Project Spaces";
+}
+
+<section class="page-head">
+    <div>
+        <p class="page-kicker">Project Spaces</p>
+        <h2>Accessible Projects</h2>
+        <p class="muted-text">Open your project workspace for details, progress, and matched-team collaboration.</p>
+    </div>
+</section>
+
+@if (TempData["StatusMessage"] is string status)
+{
+    <div class="alert alert-success">@status</div>
+}
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+
+@if (Model.CurrentUser.Role == UserRole.Student && Model.PendingInvitations.Count > 0)
+{
+    <section class="card">
+        <h3>Pending Invitations</h3>
+        <p class="muted-text">Accept to join the project group and unlock project details/chat access.</p>
+        <div class="table-wrap">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Proposal</th>
+                        <th>Group Leader</th>
+                        <th>Invited At</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var invite in Model.PendingInvitations)
+                {
+                    <tr>
+                        <td>@invite.ProposalCode - @invite.ProposalTitle</td>
+                        <td>@invite.GroupLeaderName</td>
+                        <td>@invite.InvitedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>
+                            <form asp-action="AcceptInvite" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="InvitationId" value="@invite.InvitationId" />
+                                <button type="submit" class="btn-primary">Accept</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}
+
+<section class="card">
+    <h3>My Project Spaces</h3>
+
+    @if (Model.AccessibleProjects.Count == 0)
+    {
+        <p class="muted-text mb-0">No accessible project spaces yet.</p>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Proposal</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Open</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model.AccessibleProjects)
+                {
+                    <tr>
+                        <td>@item.ProposalCode - @item.Title</td>
+                        <td>@item.RoleInProject</td>
+                        <td><span class="pill status-@item.ProposalStatus.ToString().ToLowerInvariant()">@item.ProposalStatus</span></td>
+                        <td>
+                            <a class="btn-light" href="/ProjectSpace/Details?proposalId=@item.ProposalId">Open</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

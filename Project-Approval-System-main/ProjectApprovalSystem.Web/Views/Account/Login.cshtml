@@ -1,0 +1,44 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="auth-wrap">
+    <section class="auth-card">
+        <aside class="auth-panel">
+            <p class="chip">Project Approval System</p>
+            <h1>Welcome back</h1>
+            <p class="muted-text">Sign in to continue managing submissions, reviews, and approvals securely.</p>
+
+            <ul class="auth-points">
+                <li>Role-based access for students, supervisors, and administrators</li>
+                <li>Blind review workflow to protect identity before match confirmation</li>
+                <li>Centralized tracking from proposal submission to final allocation</li>
+            </ul>
+        </aside>
+
+        <div class="auth-form-area">
+            <h2>Sign in</h2>
+            <p class="muted-text">Use your registered institutional account credentials.</p>
+
+            @if (TempData["ErrorMessage"] is string error)
+            {
+                <div class="alert alert-danger">@error</div>
+            }
+
+            <form asp-action="Login" method="post" class="stack-form">
+                @Html.AntiForgeryToken()
+
+                <label asp-for="Email">Email</label>
+                <input asp-for="Email" type="email" placeholder="name@institution.edu" autocomplete="username" required />
+
+                <label asp-for="Password">Password</label>
+                <input asp-for="Password" type="password" placeholder="Enter your password" autocomplete="current-password" required />
+
+                <button type="submit" class="btn-primary auth-submit">Sign in to dashboard</button>
+            </form>
+
+            <p class="auth-help muted-text">If you do not have access, contact the PAS administrator.</p>
+        </div>
+    </section>
+</div>
