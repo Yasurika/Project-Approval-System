@@ -23,6 +23,24 @@ body {
     background: linear-gradient(145deg, #f9fbff 0%, #f2f5fb 100%);
 }
 
+body::before {
+    content: "";
+    position: fixed;
+    inset: -20% -10% auto;
+    height: 420px;
+    pointer-events: none;
+    background: radial-gradient(circle at 15% 35%, rgba(47, 128, 237, 0.13), transparent 58%), radial-gradient(circle at 78% 12%, rgba(29, 59, 139, 0.09), transparent 52%);
+    z-index: 0;
+    animation: float-aura 16s ease-in-out infinite;
+}
+
+.app-shell,
+.app-content,
+.app-sidebar {
+    position: relative;
+    z-index: 1;
+}
+
 h1,
 h2,
 h3,
@@ -88,6 +106,16 @@ h4 {
     transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 }
 
+.sidebar-nav a::after {
+    content: "";
+    display: block;
+    margin-top: 0.4rem;
+    width: 0;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.9);
+    transition: width 0.26s ease;
+}
+
 .sidebar-nav a:hover {
     background: rgba(255, 255, 255, 0.08);
     border-color: rgba(220, 231, 255, 0.36);
@@ -99,6 +127,11 @@ h4 {
     border-color: rgba(255, 255, 255, 0.42);
     color: #ffffff;
     font-weight: 600;
+}
+
+.sidebar-nav a:hover::after,
+.sidebar-nav a.active::after {
+    width: 100%;
 }
 
 .app-content {
@@ -160,6 +193,16 @@ h4 {
     border-radius: 16px;
     padding: 1rem;
     margin-bottom: 1rem;
+    transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+}
+
+.card:hover,
+.timeline-card:hover,
+.reveal-card:hover,
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(21, 44, 92, 0.12);
+    border-color: #c7d7ef;
 }
 
 .content-grid.two-col {
@@ -251,6 +294,16 @@ h4 {
     border-radius: 10px;
     padding: 0.6rem 0.75rem;
     width: 100%;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.stack-form input:focus,
+.stack-form textarea:focus,
+.stack-form select:focus {
+    outline: none;
+    border-color: #7aa7f0;
+    box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.13);
+    background: #fbfdff;
 }
 
 .btn-primary,
@@ -259,6 +312,7 @@ h4 {
     padding: 0.56rem 0.85rem;
     border: 1px solid transparent;
     cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
 }
 
 .btn-primary {
@@ -270,6 +324,18 @@ h4 {
     color: var(--text);
     border-color: var(--border);
     background: #f8faff;
+}
+
+.btn-primary:hover,
+.btn-light:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 7px 18px rgba(18, 47, 94, 0.16);
+}
+
+.btn-primary:active,
+.btn-light:active {
+    transform: translateY(0);
+    filter: brightness(0.97);
 }
 
 .pill {
@@ -329,6 +395,13 @@ h4 {
     border-radius: 14px;
     padding: 0.9rem;
     background: #fff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.feed-card:hover {
+    transform: translateY(-3px);
+    border-color: #c1d4f2;
+    box-shadow: 0 12px 24px rgba(26, 50, 96, 0.12);
 }
 
 .proposal-details-scroll {
@@ -372,6 +445,12 @@ h4 {
     border-radius: 10px;
     padding: 0.55rem 0.65rem;
     background: #ffffff;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.chat-message:hover {
+    transform: translateY(-1px);
+    border-color: #bfd4f3;
 }
 
 .chat-message.mine {
@@ -408,6 +487,71 @@ h4 {
     margin: 1rem 0;
     border: 0;
     border-top: 1px solid var(--border);
+}
+
+.table tbody tr {
+    transition: background-color 0.16s ease;
+}
+
+.table tbody tr:hover {
+    background: #f5f9ff;
+}
+
+.ui-reveal {
+    opacity: 0;
+    transform: translateY(14px) scale(0.99);
+}
+
+.ui-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #b9c8df #eef3fa;
+}
+
+*::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #b8c8e4, #9fb4d8);
+    border-radius: 999px;
+    border: 2px solid #eef3fa;
+}
+
+*::-webkit-scrollbar-track {
+    background: #eef3fa;
+}
+
+@keyframes float-aura {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+    }
+
+    .ui-reveal {
+        opacity: 1;
+        transform: none;
+    }
 }
 
 .auth-wrap {

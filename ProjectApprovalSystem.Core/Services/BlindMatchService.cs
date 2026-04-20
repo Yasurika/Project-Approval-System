@@ -45,6 +45,18 @@ public class BlindMatchService : IBlindMatchService
     /// </summary>
     public async Task<IEnumerable<Proposal>> GetAnonymousProposalsForSupervisorAsync(int supervisorId)
     {
+        var supervisorExpertise = await _unitOfWork.SupervisorExpertises
+            .GetSupervisorExpertisesAsync(supervisorId);
+        var allowedResearchAreaIds = supervisorExpertise
+            .Where(expertise => expertise.IsActive)
+            .Select(expertise => expertise.ResearchAreaId)
+            .ToHashSet();
+
+        if (allowedResearchAreaIds.Count == 0)
+        {
+            return [];
+        }
+
         // Get all pending proposals anonymously
         var proposals = await _unitOfWork.Proposals.GetAllAnonymousProposalsAsync();
 
@@ -57,7 +69,10 @@ public class BlindMatchService : IBlindMatchService
 
         // Show all Pending proposals that this supervisor hasn't already interacted with
         var filtered = proposals
-            .Where(p => p.Status == ProposalStatus.Pending && !alreadyActedProposalIds.Contains(p.Id))
+            .Where(p =>
+                p.Status == ProposalStatus.Pending &&
+                allowedResearchAreaIds.Contains(p.ResearchAreaId) &&
+                !alreadyActedProposalIds.Contains(p.Id))
             .ToList();
 
         return filtered.Select(CreateAnonymousProposal).ToList();
@@ -72,6 +87,11 @@ public class BlindMatchService : IBlindMatchService
         var proposal = await _unitOfWork.Proposals.GetByIdAsync(proposalId);
         if (proposal == null || proposal.Status != ProposalStatus.Pending)
             throw new InvalidOperationException("Proposal not found or not available for matching");
+
+        var hasExpertise = await _unitOfWork.SupervisorExpertises
+            .HasExpertiseAsync(supervisorId, proposal.ResearchAreaId);
+        if (!hasExpertise)
+            throw new InvalidOperationException("You can only express interest in projects that match your expertise tags");
 
         // Check if supervisor already has interest in this proposal
         var existingMatch = await _unitOfWork.Matches.GetExistingMatchAsync(proposalId, supervisorId);

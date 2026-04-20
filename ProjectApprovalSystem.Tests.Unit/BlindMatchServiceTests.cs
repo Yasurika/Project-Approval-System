@@ -70,6 +70,8 @@ public class BlindMatchServiceTests
 
         _mockUnitOfWork.Setup(u => u.Proposals.GetByIdAsync(proposalId))
             .ReturnsAsync(proposal);
+        _mockUnitOfWork.Setup(u => u.SupervisorExpertises.HasExpertiseAsync(supervisorId, proposal.ResearchAreaId))
+            .ReturnsAsync(true);
         _mockUnitOfWork.Setup(u => u.Matches.GetExistingMatchAsync(proposalId, supervisorId))
             .ReturnsAsync((ProjectApprovalSystem.Core.Entities.Match?)null);
         _mockUnitOfWork.Setup(u => u.Matches.AddAsync(It.IsAny<ProjectApprovalSystem.Core.Entities.Match>()))
@@ -125,7 +127,8 @@ public class BlindMatchServiceTests
         var proposals = new List<Proposal>
         {
             new Proposal { Id = 1, ProposalId = "2024-0001", Title = "Project 1", Abstract = "Abstract 1", TechStack = "Tech1", Status = ProposalStatus.Pending, ResearchAreaId = 1 },
-            new Proposal { Id = 2, ProposalId = "2024-0002", Title = "Project 2", Abstract = "Abstract 2", TechStack = "Tech2", Status = ProposalStatus.Matched, ResearchAreaId = 1 }
+            new Proposal { Id = 2, ProposalId = "2024-0002", Title = "Project 2", Abstract = "Abstract 2", TechStack = "Tech2", Status = ProposalStatus.Matched, ResearchAreaId = 1 },
+            new Proposal { Id = 3, ProposalId = "2024-0003", Title = "Project 3", Abstract = "Abstract 3", TechStack = "Tech3", Status = ProposalStatus.Pending, ResearchAreaId = 2 }
         };
 
         var expertise = new List<SupervisorExpertise>
@@ -137,11 +140,56 @@ public class BlindMatchServiceTests
             .ReturnsAsync(expertise);
         _mockUnitOfWork.Setup(u => u.Proposals.GetAllAnonymousProposalsAsync())
             .ReturnsAsync(proposals);
+        _mockUnitOfWork.Setup(u => u.Matches.GetSupervisorMatchesAsync(supervisorId))
+            .ReturnsAsync(new List<ProjectApprovalSystem.Core.Entities.Match>());
 
         var result = await _service.GetAnonymousProposalsForSupervisorAsync(supervisorId);
 
         Assert.Single(result);
+        Assert.Equal(1, result.First().ResearchAreaId);
         Assert.Equal(ProposalStatus.Pending, result.First().Status);
+    }
+
+    [Fact]
+    public async Task GetAnonymousProposalsForSupervisor_ShouldReturnEmpty_WhenSupervisorHasNoExpertise()
+    {
+        var supervisorId = 7;
+
+        _mockUnitOfWork.Setup(u => u.SupervisorExpertises.GetSupervisorExpertisesAsync(supervisorId))
+            .ReturnsAsync(new List<SupervisorExpertise>());
+
+        var result = await _service.GetAnonymousProposalsForSupervisorAsync(supervisorId);
+
+        Assert.Empty(result);
+        _mockUnitOfWork.Verify(u => u.Proposals.GetAllAnonymousProposalsAsync(), Times.Never);
+    }
+
+    [Fact]
+    public async Task ExpressInterest_ShouldFail_WhenProposalIsOutsideSupervisorExpertise()
+    {
+        var proposalId = 10;
+        var supervisorId = 5;
+        var proposal = new Proposal
+        {
+            Id = proposalId,
+            ProposalId = "2026-0010",
+            Title = "IoT Project",
+            Abstract = "Test abstract",
+            TechStack = "C#",
+            Status = ProposalStatus.Pending,
+            ResearchAreaId = 99
+        };
+
+        _mockUnitOfWork.Setup(u => u.Proposals.GetByIdAsync(proposalId))
+            .ReturnsAsync(proposal);
+        _mockUnitOfWork.Setup(u => u.SupervisorExpertises.HasExpertiseAsync(supervisorId, proposal.ResearchAreaId))
+            .ReturnsAsync(false);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _service.ExpressInterestAsync(proposalId, supervisorId, "Interested"));
+
+        _mockUnitOfWork.Verify(u => u.Matches.AddAsync(It.IsAny<ProjectApprovalSystem.Core.Entities.Match>()), Times.Never);
+        _mockUnitOfWork.Verify(u => u.SaveChangesAsync(), Times.Never);
     }
 }
 
